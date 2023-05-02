@@ -105,9 +105,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.list.ResetFilter()
 					rgx := regexp.MustCompile(`\((.*?)\)`)
 					pid := rgx.FindStringSubmatch(m.list.SelectedItem().FilterValue())[1]
-					killPort(pid)
+
+					err := logKillPort(pid)
+					if err != nil {
+						log.Fatal(err)
+					}
 					// Get running processes again when a process is killed
-					m.list.SetItems(getProcesses())
+					//m.list.SetItems(getProcesses())
 				}
 				// In all cases, reset selected port at the end
 				m.selectedPort = ""
@@ -201,6 +205,16 @@ func getProcesses() []list.Item {
 	}
 
 	return processes
+}
+
+// For debugging. Logs the port that will be killed.
+func logKillPort(pid string) error {
+	pidInt, err := strconv.Atoi(pid)
+	if err != nil {
+		return err
+	}
+	message := fmt.Sprintf("Killing process: %s (int value = %v)", pid, pidInt)
+	return fmt.Errorf("error %s", message)
 }
 
 func killPort(pid string) {
